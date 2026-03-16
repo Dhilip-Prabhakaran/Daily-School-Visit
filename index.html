@@ -416,6 +416,7 @@ const SK_CONFIG  = 'schoolCRM_zohoConfig';
 const SK_TOKEN   = 'schoolCRM_token';
 const SK_REP     = 'schoolCRM_rep';
 const ZOHO_API   = 'https://sheet.zoho.in/api/v2';
+const WEBHOOK_URL = 'https://flow.zoho.in/60067412720/flow/webhook/incoming?zapikey=1001.aca7348d07ebee69eb63e5ae748572be.ce9eb5571e4dc48fbb154127a0320a6b&isdebug=false';
 
 let records   = [];
 let sortField = 'date';
@@ -713,31 +714,37 @@ async function saveRecord() {
   refreshAll();
   clearForm();
 
-  // Sync to Zoho
-  if (isConnected() && getCfg().workbookId) {
-    const btn = document.getElementById('saveBtn');
-    btn.disabled = true; btn.textContent = '⏳ Saving…';
-    try {
-      if (editId && rec.zohoRowIdx) {
-        await zohoUpdateRow(rec.zohoRowIdx, rec);
-        toast('✅ Visit updated & synced to Zoho!');
-      } else {
-        const resp = await zohoAddRow(rec);
-        // Try to store row index returned by Zoho
-        if (resp && resp.row_index) {
-          const idx = records.findIndex(r=>r.id===rec.id);
-          if (idx>=0) { records[idx].zohoRowIdx = resp.row_index; saveLocal(); }
-        }
-        toast('✅ Visit saved & synced to Zoho Sheet!');
-      }
-    } catch(e) {
-      toast('💾 Saved locally. Zoho sync failed: '+e.message, 'warn');
-      console.error('[ZohoSave]', e);
-    } finally {
-      btn.disabled = false; btn.textContent = '💾 Save Visit';
+  // Sync to Zoho via Webhook
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+  try {
+    const payload = {
+      date:       rec.date,
+      rep:        rec.rep,
+      school:     rec.school,
+      type:       rec.type,
+      status:     rec.status,
+      contact:    rec.contact || '',
+      desc:       rec.desc,
+      nextDate:   rec.nextDate || '',
+      nextAction: rec.nextAction || '',
+      id:         rec.id
+    };
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      toast('✅ Visit saved & synced to Zoho Sheet!');
+    } else {
+      throw new Error(`HTTP ${res.status}`);
     }
-  } else {
-    toast(editId ? '✅ Record updated locally' : '💾 Visit saved locally (not synced to Zoho)');
+  } catch(e) {
+    toast('💾 Saved locally. Zoho sync failed: ' + e.message, 'warn');
+    console.error('[WebhookSave]', e);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Visit';
   }
 }
 
@@ -1167,17 +1174,10 @@ function refreshAll() {
   clearForm();
   refreshAll();
 
-  // Sync status
-  if(isConnected()) {
-    updateSyncUI('connected');
-    updateSyncLabel();
-    syncFromZoho(); // auto-sync on load if token valid
-  } else if(isZohoCfg()) {
-    updateSyncUI('disconnected');
-    document.getElementById('syncLabel').textContent='Click to connect Zoho';
-    // Show a one-time connect hint
-    setTimeout(()=>toast('👆 Click "Connect Zoho" in the header to sign in & sync data'), 1000);
-  }
+  // Webhook mode — always ready, no OAuth needed
+  updateSyncUI('connected');
+  document.getElementById('syncLabel').textContent = 'Zoho Webhook Ready';
+  document.getElementById('syncStatus').onclick = null; // disable click
 })();
 </script>
 </body>
