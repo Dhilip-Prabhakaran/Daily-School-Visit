@@ -375,7 +375,7 @@ a{color:var(--primary);}
   <input type="text" id="cfgWorkbookId" placeholder="e.g. abcd1234efgh5678ijkl">
 
   <label>Sheet Tab Name</label>
-  <input type="text" id="cfgSheetName" value="School Visits" placeholder="School Visits">
+  <input type="text" id="cfgSheetName" value="Daily School Visit" placeholder="Daily School Visit">
 
   <label>Redirect URI <span style="font-weight:400;color:var(--muted)">(must match what you set in Zoho API Console)</span></label>
   <input type="text" id="cfgRedirectUri" placeholder="https://your-server/school_crm_zoho.html">
@@ -430,7 +430,7 @@ let isSyncing = false;
 // ── Default config (pre-filled) ──
 const DEFAULT_CFG = {
   clientId:   '1000.RVHNRFTQNBHY1YPZFZOXV3AOKWZLXQ',
-  workbookId: 'kem1583c87ebbac5f4bfabc039de1eddb85ae',
+  workbookId: '1583c87ebbac5f4bfabc039de1eddb85ae',
   sheetName:  'Daily School Visit',
   dc:         '.in',
   redirectUri: 'https://dhilip-prabhakaran.github.io/Daily-School-Visit/'
@@ -526,15 +526,34 @@ function extractAndStoreToken(hashOrQuery) {
 async function zohoReq(method, path, body) {
   const token = getToken();
   if (!token) throw new Error('Not connected to Zoho. Click "Connect" to re-authenticate.');
-  const opts = {
-    method,
-    headers: { 'Authorization': `Zoho-oauthtoken ${token}` }
-  };
-  if (body) {
-    opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    opts.body = new URLSearchParams(body).toString();
+
+  let url, opts;
+
+  if (method === 'GET') {
+    url  = `${ZOHO_API}${path}`;
+    opts = {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Authorization': `Zoho-oauthtoken ${token}`
+      }
+    };
+  } else {
+    // POST / PUT / DELETE — Zoho Sheet API accepts form-encoded body
+    url  = `${ZOHO_API}${path}`;
+    const params = new URLSearchParams(body || {});
+    opts = {
+      method,
+      mode: 'cors',
+      headers: {
+        'Authorization': `Zoho-oauthtoken ${token}`,
+        'Content-Type':  'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    };
   }
-  const res = await fetch(`${ZOHO_API}${path}`, opts);
+
+  const res  = await fetch(url, opts);
   const data = await res.json().catch(() => ({}));
   if (data.error_code && data.error_code !== 0) throw new Error(data.message || `Zoho error ${data.error_code}`);
   return data;
@@ -550,7 +569,7 @@ async function zohoGetAllRows() {
 async function zohoAddRow(rec) {
   const cfg = getCfg();
   return zohoReq('POST', `/${cfg.workbookId}/row`, {
-    worksheet_name: cfg.sheetName || 'School Visits',
+    worksheet_name: cfg.sheetName || 'Daily School Visit',
     row_data: JSON.stringify(recToRow(rec))
   });
 }
@@ -558,7 +577,7 @@ async function zohoAddRow(rec) {
 async function zohoUpdateRow(rowIndex, rec) {
   const cfg = getCfg();
   return zohoReq('PUT', `/${cfg.workbookId}/row`, {
-    worksheet_name: cfg.sheetName || 'School Visits',
+    worksheet_name: cfg.sheetName || 'Daily School Visit',
     row_index: rowIndex,
     row_data: JSON.stringify(recToRow(rec))
   });
@@ -567,7 +586,7 @@ async function zohoUpdateRow(rowIndex, rec) {
 async function zohoDeleteRow(rowIndex) {
   const cfg = getCfg();
   return zohoReq('DELETE', `/${cfg.workbookId}/row`, {
-    worksheet_name: cfg.sheetName || 'School Visits',
+    worksheet_name: cfg.sheetName || 'Daily School Visit',
     row_index: rowIndex
   });
 }
@@ -598,7 +617,6 @@ function rowToRec(row) {
   };
 }
 
-// Full sync: pull all rows from Zoho
 async function syncFromZoho() {
   if (!isConnected()) { connectZoho(); return; }
   if (!getCfg().workbookId) { toast('⚠️ Set Workbook ID in Setup first', 'warn'); return; }
@@ -612,14 +630,21 @@ async function syncFromZoho() {
       refreshAll();
       toast(`✅ Synced ${records.length} records from Zoho Sheet`);
     } else {
-      toast('ℹ️ Sheet is empty or no data found yet');
+      toast('ℹ️ Connected! Sheet is empty — start logging visits.');
     }
     updateSyncUI('connected');
     localStorage.setItem('zoho_last_sync', new Date().toLocaleTimeString());
     updateSyncLabel();
   } catch(e) {
-    toast('❌ Sync failed: ' + e.message, 'warn');
     console.error('[ZohoSync]', e);
+    let msg = e.message || 'Unknown error';
+    if (msg.includes('Failed to fetch')) {
+      msg = 'CORS error — make sure your Zoho API client type is "Client-based Application" and the redirect URI matches exactly.';
+    } else if (msg.includes('invalid_token') || msg.includes('token')) {
+      updateSyncUI('disconnected');
+      msg = 'Token expired — please reconnect.';
+    }
+    toast('❌ Sync failed: ' + msg, 'warn');
     if (e.message.includes('Not connected') || e.message.includes('token')) {
       updateSyncUI('disconnected');
     } else {
