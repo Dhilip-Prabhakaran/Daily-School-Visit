@@ -661,24 +661,43 @@ async function saveRecord() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = '⏳ Saving…';
   try {
-    const formData = new FormData();
-    formData.append('date',       rec.date);
-    formData.append('rep',        rec.rep);
-    formData.append('school',     rec.school);
-    formData.append('type',       rec.type);
-    formData.append('status',     rec.status);
-    formData.append('contact',    rec.contact || '');
-    formData.append('desc',       rec.desc);
-    formData.append('nextDate',   rec.nextDate || '');
-    formData.append('nextAction', rec.nextAction || '');
-    formData.append('id',         rec.id);
+    const payload = {
+      date:       rec.date,
+      rep:        rec.rep,
+      school:     rec.school,
+      type:       rec.type,
+      status:     rec.status,
+      contact:    rec.contact || '',
+      desc:       rec.desc,
+      nextDate:   rec.nextDate || '',
+      nextAction: rec.nextAction || '',
+      id:         rec.id
+    };
 
-    await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: formData
-    });
-    toast('✅ Visit saved & synced to Zoho Sheet!');
+    const body = JSON.stringify(payload);
+    const headers = { 'Content-Type': 'application/json' };
+
+    // Try direct first, then fallback proxies
+    const attempts = [
+      () => fetch(WEBHOOK_URL, { method:'POST', headers, body }),
+      () => fetch('https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL), { method:'POST', headers, body }),
+      () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(WEBHOOK_URL), { method:'POST', headers, body }),
+    ];
+
+    let success = false;
+    for (const attempt of attempts) {
+      try {
+        const res = await attempt();
+        if (res.ok || res.status === 200 || res.type === 'opaque') {
+          success = true; break;
+        }
+      } catch(e) { continue; }
+    }
+    if (success) {
+      toast('✅ Visit saved & synced to Zoho Sheet!');
+    } else {
+      throw new Error('All sync attempts failed');
+    }
   } catch(e) {
     toast('💾 Saved locally. Zoho sync failed: ' + e.message, 'warn');
     console.error('[WebhookSave]', e);
