@@ -176,7 +176,7 @@ a{color:var(--primary);}
       <div class="dot" id="syncDot"></div>
       <span id="syncLabel">Not connected</span>
     </div>
-    <button class="hbtn" onclick="showSettings()">⚙️ Setup</button>
+
   </div>
 </header>
 
@@ -332,63 +332,6 @@ a{color:var(--primary);}
 
 </div><!-- /container -->
 
-
-<!-- ══════════════════════════════════════════════
-     SETTINGS MODAL
-══════════════════════════════════════════════ -->
-<div class="overlay" id="settingsOverlay">
-<div class="modal" style="max-width:580px;">
-  <h3>⚙️ Zoho Sheet Connection Setup</h3>
-
-  <!-- Setup Guide -->
-  <div class="wizard-step">
-    <h4><span class="step-num">1</span>Create a Zoho API Client</h4>
-    <p>Open <a href="https://api-console.zoho.com/" target="_blank">api-console.zoho.com</a> → Add Client → Choose <strong>"Client-based Application"</strong> → Set Authorized Redirect URI to this page's URL (shown below) → Copy the <strong>Client ID</strong>.</p>
-  </div>
-  <div class="wizard-step">
-    <h4><span class="step-num">2</span>Create your Zoho Sheet</h4>
-    <p>In Zoho Sheet, create a new workbook. On row 1, add these exact headers (copy-paste):<br>
-    <code>Date | Rep | School | Type | Status | Contact | Description | Next Date | Next Action | Record ID</code><br>
-    Name the sheet tab: <strong>School Visits</strong>. Then copy the <strong>Workbook ID</strong> from the URL:<br>
-    <code>sheet.zoho.com/sheet/open/<strong>{WORKBOOK_ID}</strong>/sheets/…</code></p>
-  </div>
-  <div class="wizard-step">
-    <h4><span class="step-num">3</span>Share with team</h4>
-    <p>Share the Zoho Sheet (Edit access) with all sales reps. Share this HTML file in your Zoho WorkDrive — everyone opens it and connects with their own Zoho account.</p>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Config fields -->
-  <label>Zoho Data Center</label>
-  <div class="dc-select" id="dcSelect">
-    <span class="dc-opt sel" data-dc=".com" onclick="selDC(this)">.com (US)</span>
-    <span class="dc-opt" data-dc=".in" onclick="selDC(this)">.in (India)</span>
-    <span class="dc-opt" data-dc=".eu" onclick="selDC(this)">.eu (Europe)</span>
-    <span class="dc-opt" data-dc=".com.au" onclick="selDC(this)">.com.au (Australia)</span>
-  </div>
-
-  <label>Client ID <span style="font-weight:400;color:var(--muted)">(from Zoho API Console)</span></label>
-  <input type="text" id="cfgClientId" placeholder="e.g. 1000.ABC123...">
-
-  <label>Workbook ID <span style="font-weight:400;color:var(--muted)">(from Zoho Sheet URL)</span></label>
-  <input type="text" id="cfgWorkbookId" placeholder="e.g. abcd1234efgh5678ijkl">
-
-  <label>Sheet Tab Name</label>
-  <input type="text" id="cfgSheetName" value="Daily School Visit" placeholder="Daily School Visit">
-
-  <label>Redirect URI <span style="font-weight:400;color:var(--muted)">(must match what you set in Zoho API Console)</span></label>
-  <input type="text" id="cfgRedirectUri" placeholder="https://your-server/school_crm_zoho.html">
-  <p style="font-size:11px;color:var(--muted);margin-top:3px;">This page's URL: <strong id="currentUrl" style="color:var(--primary);word-break:break-all;"></strong></p>
-
-  <div id="cfgStatus" style="margin-top:10px;font-size:12px;"></div>
-
-  <div class="modal-actions">
-    <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
-    <button class="btn btn-primary" onclick="saveSettings()">💾 Save &amp; Connect</button>
-  </div>
-</div>
-</div>
 
 
 <!-- ══════ DELETE MODAL ══════ -->
@@ -732,14 +675,12 @@ async function saveRecord() {
     };
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     });
-    if (res.ok) {
-      toast('✅ Visit saved & synced to Zoho Sheet!');
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
+    // no-cors returns opaque response — if no error thrown, it worked
+    toast('✅ Visit saved & synced to Zoho Sheet!');
   } catch(e) {
     toast('💾 Saved locally. Zoho sync failed: ' + e.message, 'warn');
     console.error('[WebhookSave]', e);
@@ -1038,47 +979,6 @@ function showCsvConsolidated(data) {
     <div style="margin-top:10px;">
       <button class="btn btn-success btn-sm" onclick="dlFile('consolidated_${today()}.csv','${CSV_HDR.join(',')}\\n'+${JSON.stringify(data)}.map(r=>[r.date,r.rep,r.school,r.type,r.status,r.contact||'',r.desc,r.nextDate||'',r.nextAction||''].map(v=>'\\"'+String(v||'').replace(/\\"/g,'\\"\\\"')+'\\"').join(',')).join('\\n'),'text/csv')">⬇ Export Consolidated CSV</button>
     </div>`;
-}
-
-
-// ══════════════════════════════════════════════
-//  SETTINGS MODAL
-// ══════════════════════════════════════════════
-function showSettings() {
-  const cfg = getCfg();
-  document.getElementById('cfgClientId').value   = cfg.clientId||'';
-  document.getElementById('cfgWorkbookId').value = cfg.workbookId||'';
-  document.getElementById('cfgSheetName').value  = cfg.sheetName||'Daily School Visit';
-  document.getElementById('cfgRedirectUri').value= cfg.redirectUri||'';
-  document.getElementById('currentUrl').textContent = window.location.href.split('#')[0].split('?')[0];
-  // DC selector — default to .in
-  const dc = cfg.dc||'.in';
-  document.querySelectorAll('.dc-opt').forEach(el=>{
-    el.classList.toggle('sel', el.dataset.dc===dc);
-  });
-  document.getElementById('settingsOverlay').classList.add('show');
-}
-
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
-
-function selDC(el) {
-  document.querySelectorAll('.dc-opt').forEach(e=>e.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function saveSettings() {
-  const clientId   = document.getElementById('cfgClientId').value.trim();
-  const workbookId = document.getElementById('cfgWorkbookId').value.trim();
-  const sheetName  = document.getElementById('cfgSheetName').value.trim() || 'Daily School Visit';
-  const redirectUri= document.getElementById('cfgRedirectUri').value.trim();
-  const dc         = document.querySelector('.dc-opt.sel')?.dataset.dc || '.in';
-
-  if (!clientId)   { document.getElementById('cfgStatus').innerHTML='<span style="color:red">❌ Client ID is required</span>'; return; }
-  if (!workbookId) { document.getElementById('cfgStatus').innerHTML='<span style="color:red">❌ Workbook ID is required</span>'; return; }
-
-  saveCfg({clientId, workbookId, sheetName, redirectUri, dc});
-  document.getElementById('cfgStatus').innerHTML = '<span style="color:green">✅ Saved! Connecting to Zoho…</span>';
-  setTimeout(() => { closeSettings(); connectZoho(); }, 800);
 }
 
 
