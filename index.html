@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Visit CRM</title>
+<style>
+:root {
+  --primary:#2563eb;--primary-dark:#1d4ed8;--success:#16a34a;
+  --warning:#d97706;--danger:#dc2626;--bg:#f1f5f9;--card:#fff;
+  --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.header-left h1{font-size:18px;font-weight:700;}
+.header-left span{font-size:11px;opacity:.7;}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sync-status{display:flex;align-items:center;gap:5px;font-size:12px;background:rgba(0,0,0,.2);padding:4px 10px;border-radius:20px;cursor:pointer;}
+.dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0;}
+.dot.green{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+.dot.yellow{background:#fbbf24;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;}
+.hbtn:hover{background:rgba(255,255,255,.3);}
+.rep-in{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;padding:5px 10px;font-size:12px;width:140px;}
+.rep-in::placeholder{color:rgba(255,255,255,.5);}
+.rep-in:focus{outline:none;box-shadow:0 0 0 2px rgba(255,255,255,.3);}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 20px;overflow-x:auto;}
+.tab{padding:11px 18px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:.2s;white-space:nowrap;}
+.tab:hover{color:var(--primary);}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+
+/* LAYOUT */
+.container{max-width:1200px;margin:0 auto;padding:20px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px;}
+.stat-card{background:#fff;border-radius:10px;padding:12px 14px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.stat-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.stat-value{font-size:21px;font-weight:700;line-height:1.1;}
+
+/* CARD */
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.card h2{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+input,select,textarea{padding:8px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);font-family:inherit;transition:.2s;background:#fff;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+textarea{resize:vertical;min-height:75px;}
+.form-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:#e2e8f0;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-success:hover{background:#15803d;}
+.btn-warning{background:var(--warning);color:#fff;}
+.btn-danger{background:#fee2e2;color:var(--danger);border:1px solid #fca5a5;}
+.btn-sm{padding:4px 11px;font-size:11px;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-outline:hover{background:#f8fafc;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FILTERS */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.filter-bar input,.filter-bar select{flex:1;min-width:130px;max-width:190px;}
+.spacer{flex:1;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{background:#f8fafc;}
+th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--primary);}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8fafc;}
+.td-school{font-weight:600;max-width:170px;}
+.td-desc{color:var(--muted);max-width:240px;font-size:11px;line-height:1.5;}
+.td-rep{font-size:11px;color:var(--muted);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-new{background:#dbeafe;color:#1d4ed8;}
+.badge-fup{background:#fef9c3;color:#854d0e;}
+.badge-target{background:#f1f5f9;color:#475569;}
+.badge-lead{background:#dbeafe;color:#1d4ed8;}
+.badge-oppty{background:#fef3c7;color:#92400e;}
+.badge-closure{background:#dcfce7;color:#166534;}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.pcol{background:#f8fafc;border-radius:10px;padding:12px;border:1px solid var(--border);min-height:260px;}
+.pcol-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.pcard{background:#fff;border-radius:7px;padding:9px 11px;margin-bottom:7px;border:1px solid var(--border);font-size:11px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.pcard .ps{font-weight:600;font-size:12px;margin-bottom:2px;}
+.pcard .pm{color:var(--muted);}
+.cbubble{border-radius:10px;padding:1px 7px;font-size:10px;color:#fff;}
+.cb-t{background:#94a3b8;}.cb-l{background:var(--primary);}.cb-o{background:var(--warning);}.cb-c{background:var(--success);}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:24px;width:90%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.modal label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;margin-top:12px;}
+.modal input,.modal select{width:100%;}
+.modal input:first-of-type,.modal select:first-of-type{margin-top:0;}
+.info-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;font-size:12px;color:#0c4a6e;line-height:1.7;margin:10px 0;}
+.info-box strong{color:#0369a1;}
+.warn-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;font-size:12px;color:#78350f;margin:10px 0;}
+.step-list{padding-left:16px;margin-top:6px;}
+.step-list li{margin-bottom:5px;}
+a{color:var(--primary);}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;max-width:300px;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty div{font-size:40px;margin-bottom:10px;}
+
+/* MISC */
+.hidden{display:none!important;}
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.tag{display:inline-block;background:#f1f5f9;border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:10px;font-weight:600;color:var(--muted);margin-right:4px;}
+
+/* ZOHO SETUP WIZARD */
+.wizard-step{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;}
+.wizard-step .step-num{display:inline-flex;width:22px;height:22px;background:var(--primary);color:#fff;border-radius:50%;font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0;}
+.wizard-step h4{display:flex;align-items:center;font-size:13px;margin-bottom:6px;}
+.wizard-step p{font-size:12px;color:var(--muted);line-height:1.6;margin-left:30px;}
+.wizard-step code{background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:11px;}
+.dc-select{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.dc-opt{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;cursor:pointer;font-weight:600;transition:.2s;}
+.dc-opt.sel{background:var(--primary);color:#fff;border-color:var(--primary);}
+.dc-opt:hover:not(.sel){background:#f1f5f9;}
+
+@media(max-width:768px){
+  .pipeline{grid-template-columns:1fr 1fr;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+}
+@media(max-width:480px){
+  .pipeline{grid-template-columns:1fr;}
+  .container{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="header-left">
+    <h1>🏫 School Visit CRM</h1>
+    <span id="dateDisplay"></span>
+  </div>
+  <div class="header-right">
+    <input class="rep-in" id="repInput" placeholder="Your Name" title="Your name (auto-filled in forms)">
+    <div class="sync-status" id="syncStatus" onclick="handleSyncClick()" title="Click to sync / connect Zoho">
+      <div class="dot" id="syncDot"></div>
+      <span id="syncLabel">Not connected</span>
+    </div>
+    <button class="hbtn" onclick="showSettings()">⚙️ Setup</button>
+  </div>
+</header>
+
+<!-- ══════ TABS ══════ -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('log')">📝 Log Visit</div>
+  <div class="tab" onclick="showTab('records')">📋 All Records</div>
+  <div class="tab" onclick="showTab('pipeline')">🎯 Pipeline</div>
+  <div class="tab" onclick="showTab('consolidate')">📊 Team View</div>
+</div>
+
+<div class="container">
+
+<!-- ══════ TAB: LOG ══════ -->
+<div id="tab-log">
+  <div class="stats" id="statsBar"></div>
+  <div class="card">
+    <h2>➕ <span id="formTitle">Log New Visit</span></h2>
+    <input type="hidden" id="editId">
+    <div class="form-grid">
+      <div class="fg"><label>Date *</label><input type="date" id="fDate"></div>
+      <div class="fg"><label>Sales Rep *</label><input type="text" id="fRep" placeholder="Your full name"></div>
+      <div class="fg"><label>School Name *</label><input type="text" id="fSchool" placeholder="e.g. Greenfield Academy"></div>
+      <div class="fg"><label>Visit Type</label>
+        <select id="fType"><option value="New">🆕 New School</option><option value="Follow-up">🔄 Follow-up</option></select>
+      </div>
+      <div class="fg"><label>Status *</label>
+        <select id="fStatus">
+          <option value="Target">🎯 Target</option>
+          <option value="Lead">💡 Lead</option>
+          <option value="Opportunity">🔥 Opportunity</option>
+          <option value="Closure">✅ Closure</option>
+        </select>
+      </div>
+      <div class="fg"><label>Contact Person</label><input type="text" id="fContact" placeholder="Principal / Coordinator"></div>
+      <div class="fg full"><label>Meeting Description *</label>
+        <textarea id="fDesc" rows="4" placeholder="Describe what was discussed, key points, objections, next steps…"></textarea>
+      </div>
+      <div class="fg"><label>Next Follow-up Date</label><input type="date" id="fNextDate"></div>
+      <div class="fg"><label>Next Action</label><input type="text" id="fNextAction" placeholder="e.g. Send proposal, Demo call"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">💾 Save Visit</button>
+      <button class="btn btn-secondary" onclick="clearForm()">✖ Clear</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📅 Today's Visits <span id="todayCount" style="font-size:11px;color:var(--muted);font-weight:400;margin-left:5px;"></span></h2>
+    <div id="todayTable"></div>
+  </div>
+</div>
+
+<!-- ══════ TAB: ALL RECORDS ══════ -->
+<div id="tab-records" class="hidden">
+  <div class="card">
+    <h2>📋 All Visit Records</h2>
+    <div class="filter-bar">
+      <input type="text"  id="searchQ"      placeholder="🔍 Search school / rep…" oninput="renderTable()">
+      <input type="date"  id="filterDate"   onchange="renderTable()">
+      <select id="filterStatus" onchange="renderTable()">
+        <option value="">All Statuses</option>
+        <option>Target</option><option>Lead</option><option>Opportunity</option><option>Closure</option>
+      </select>
+      <select id="filterType" onchange="renderTable()">
+        <option value="">All Types</option><option>New</option><option>Follow-up</option>
+      </select>
+      <select id="filterRep" onchange="renderTable()"><option value="">All Reps</option></select>
+      <div class="spacer"></div>
+      <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('date')">Date ↕</th>
+            <th onclick="sortBy('rep')">Rep ↕</th>
+            <th onclick="sortBy('school')">School ↕</th>
+            <th>Type</th>
+            <th onclick="sortBy('status')">Status ↕</th>
+            <th>Contact</th>
+            <th>Description</th>
+            <th>Next Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div id="recordCount" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- ══════ TAB: PIPELINE ══════ -->
+<div id="tab-pipeline" class="hidden">
+  <div class="card">
+    <h2>🎯 Sales Pipeline</h2>
+    <div class="filter-bar">
+      <select id="pipelineRep" onchange="renderPipeline()"><option value="">All Reps</option></select>
+    </div>
+    <div class="pipeline" id="pipelineView"></div>
+  </div>
+</div>
+
+<!-- ══════ TAB: TEAM VIEW ══════ -->
+<div id="tab-consolidate" class="hidden">
+  <div class="card">
+    <h2>📊 Team Consolidated View</h2>
+    <div id="zohoConnectedView" class="hidden">
+      <!-- Shows when Zoho is connected — data is live from the sheet -->
+      <div class="info-box">
+        <strong>🟢 Live Zoho Sheet</strong> — All records below are pulled from your shared Zoho Sheet in real time.
+        Management can also open the Zoho Sheet directly for pivot tables and charts.
+      </div>
+      <div class="stats" id="conStats"></div>
+      <div class="filter-bar" style="margin-top:10px;">
+        <input type="text" id="conSearch" placeholder="🔍 Search…" oninput="renderConsolidated()">
+        <select id="conRep"    onchange="renderConsolidated()"><option value="">All Reps</option></select>
+        <select id="conStatus" onchange="renderConsolidated()">
+          <option value="">All Statuses</option>
+          <option>Target</option><option>Lead</option><option>Opportunity</option><option>Closure</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-success btn-sm" onclick="exportCSV('all')">⬇ Export All</button>
+      </div>
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Rep</th><th>School</th><th>Type</th><th>Status</th><th>Contact</th><th>Description</th><th>Next Date</th></tr>
+          </thead>
+          <tbody id="conBody"></tbody>
+        </table>
+      </div>
+      <div id="conCount" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+    </div>
+
+    <!-- Shows when Zoho is NOT connected -->
+    <div id="noZohoView">
+      <div class="warn-box">
+        ⚠️ <strong>Zoho not connected.</strong> Connect to Zoho Sheet to see the full team's live data here. Or use CSV import below.
+      </div>
+      <button class="btn btn-primary" onclick="showSettings()" style="margin-bottom:18px;">🔗 Connect Zoho Sheet</button>
+      <div class="divider"></div>
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:10px;">📂 Or Import CSV files manually</h3>
+      <label class="btn btn-warning" style="cursor:pointer;">
+        📂 Import CSV Files
+        <input type="file" id="importFiles" accept=".csv" multiple style="display:none" onchange="importCSVs(this)">
+      </label>
+      <span id="importStatus" style="font-size:11px;color:var(--muted);margin-left:10px;"></span>
+      <div id="csvConsolidatedView" class="hidden" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+
+<!-- ══════════════════════════════════════════════
+     SETTINGS MODAL
+══════════════════════════════════════════════ -->
+<div class="overlay" id="settingsOverlay">
+<div class="modal" style="max-width:580px;">
+  <h3>⚙️ Zoho Sheet Connection Setup</h3>
+
+  <!-- Setup Guide -->
+  <div class="wizard-step">
+    <h4><span class="step-num">1</span>Create a Zoho API Client</h4>
+    <p>Open <a href="https://api-console.zoho.com/" target="_blank">api-console.zoho.com</a> → Add Client → Choose <strong>"Client-based Application"</strong> → Set Authorized Redirect URI to this page's URL (shown below) → Copy the <strong>Client ID</strong>.</p>
+  </div>
+  <div class="wizard-step">
+    <h4><span class="step-num">2</span>Create your Zoho Sheet</h4>
+    <p>In Zoho Sheet, create a new workbook. On row 1, add these exact headers (copy-paste):<br>
+    <code>Date | Rep | School | Type | Status | Contact | Description | Next Date | Next Action | Record ID</code><br>
+    Name the sheet tab: <strong>School Visits</strong>. Then copy the <strong>Workbook ID</strong> from the URL:<br>
+    <code>sheet.zoho.com/sheet/open/<strong>{WORKBOOK_ID}</strong>/sheets/…</code></p>
+  </div>
+  <div class="wizard-step">
+    <h4><span class="step-num">3</span>Share with team</h4>
+    <p>Share the Zoho Sheet (Edit access) with all sales reps. Share this HTML file in your Zoho WorkDrive — everyone opens it and connects with their own Zoho account.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Config fields -->
+  <label>Zoho Data Center</label>
+  <div class="dc-select" id="dcSelect">
+    <span class="dc-opt sel" data-dc=".com" onclick="selDC(this)">.com (US)</span>
+    <span class="dc-opt" data-dc=".in" onclick="selDC(this)">.in (India)</span>
+    <span class="dc-opt" data-dc=".eu" onclick="selDC(this)">.eu (Europe)</span>
+    <span class="dc-opt" data-dc=".com.au" onclick="selDC(this)">.com.au (Australia)</span>
+  </div>
+
+  <label>Client ID <span style="font-weight:400;color:var(--muted)">(from Zoho API Console)</span></label>
+  <input type="text" id="cfgClientId" placeholder="e.g. 1000.ABC123...">
+
+  <label>Workbook ID <span style="font-weight:400;color:var(--muted)">(from Zoho Sheet URL)</span></label>
+  <input type="text" id="cfgWorkbookId" placeholder="e.g. abcd1234efgh5678ijkl">
+
+  <label>Sheet Tab Name</label>
+  <input type="text" id="cfgSheetName" value="School Visits" placeholder="School Visits">
+
+  <label>Redirect URI <span style="font-weight:400;color:var(--muted)">(must match what you set in Zoho API Console)</span></label>
+  <input type="text" id="cfgRedirectUri" placeholder="https://your-server/school_crm_zoho.html">
+  <p style="font-size:11px;color:var(--muted);margin-top:3px;">This page's URL: <strong id="currentUrl" style="color:var(--primary);word-break:break-all;"></strong></p>
+
+  <div id="cfgStatus" style="margin-top:10px;font-size:12px;"></div>
+
+  <div class="modal-actions">
+    <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveSettings()">💾 Save &amp; Connect</button>
+  </div>
+</div>
+</div>
+
+
+<!-- ══════ DELETE MODAL ══════ -->
+<div class="overlay" id="deleteOverlay">
+<div class="modal" style="max-width:380px;">
+  <h3>🗑️ Delete Visit Record?</h3>
+  <p style="font-size:13px;color:var(--muted);">This will remove the record locally and from Zoho Sheet (if connected).</p>
+  <div class="modal-actions">
+    <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+    <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════ TOAST ══════ -->
+<div id="toast"></div>
+
+
+<script>
+// ══════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ══════════════════════════════════════════════
+const SK_RECORDS = 'schoolCRM_records';
+const SK_CONFIG  = 'schoolCRM_zohoConfig';
+const SK_TOKEN   = 'schoolCRM_token';
+const SK_REP     = 'schoolCRM_rep';
+const ZOHO_API   = 'https://sheet.zoho.in/api/v2';
+
+let records   = [];
+let sortField = 'date';
+let sortAsc   = false;
+let deleteId  = null;
+let isSyncing = false;
+
+
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+// ── Default config (pre-filled) ──
+const DEFAULT_CFG = {
+  clientId:   '1000.RVHNRFTQNBHY1YPZFZOXV3AOKWZLXQ',
+  workbookId: 'kem1583c87ebbac5f4bfabc039de1eddb85ae',
+  sheetName:  'Daily School Visit',
+  dc:         '.in',
+  redirectUri: ''
+};
+
+function getCfg() {
+  const saved = JSON.parse(localStorage.getItem(SK_CONFIG) || '{}');
+  // Merge defaults so pre-filled values are always present
+  return Object.assign({}, DEFAULT_CFG, saved);
+}
+function saveCfg(c)     { localStorage.setItem(SK_CONFIG, JSON.stringify(c)); }
+function isZohoCfg()    { const c=getCfg(); return !!(c.clientId && c.workbookId); }
+
+// ── Token helpers ──
+function getToken() {
+  const t = JSON.parse(localStorage.getItem(SK_TOKEN) || 'null');
+  if (!t) return null;
+  if (Date.now() > t.expiry) { localStorage.removeItem(SK_TOKEN); return null; }
+  return t.token;
+}
+function storeToken(token, expiresIn) {
+  localStorage.setItem(SK_TOKEN, JSON.stringify({
+    token, expiry: Date.now() + (parseInt(expiresIn)||3600)*1000 - 60000
+  }));
+}
+function isConnected() { return !!getToken(); }
+
+
+// ══════════════════════════════════════════════
+//  ZOHO OAUTH
+// ══════════════════════════════════════════════
+function connectZoho() {
+  const cfg = getCfg();
+  if (!cfg.clientId) { toast('⚠️ Please set your Client ID in Setup first', 'warn'); showSettings(); return; }
+  if (!cfg.workbookId) { toast('⚠️ Please set your Workbook ID in Setup first', 'warn'); showSettings(); return; }
+
+  const dc          = cfg.dc || '.com';
+  const redirectUri = cfg.redirectUri || (window.location.href.split('#')[0].split('?')[0]);
+  const scope       = 'ZohoSheet.dataAPI.READ,ZohoSheet.dataAPI.UPDATE';
+  const authUrl     = `https://accounts.zoho${dc}/oauth/v2/auth?client_id=${encodeURIComponent(cfg.clientId)}&response_type=token&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=online`;
+
+  const popup = window.open(authUrl, 'zoho_auth', 'width=620,height=700,left=150,top=80');
+  if (!popup || popup.closed) {
+    // Popup blocked — redirect same window
+    sessionStorage.setItem('zoho_auth_pending','1');
+    window.location.href = authUrl;
+    return;
+  }
+
+  updateSyncUI('connecting');
+  const timer = setInterval(() => {
+    try {
+      const url = popup.location.href || '';
+      if (url.includes('access_token=')) {
+        clearInterval(timer);
+        const hash = popup.location.hash || popup.location.search;
+        popup.close();
+        extractAndStoreToken(hash.startsWith('#') ? hash.slice(1) : hash.slice(1));
+      }
+    } catch(e) { /* cross-origin — keep waiting */ }
+    if (!popup || popup.closed) clearInterval(timer);
+  }, 400);
+}
+
+function extractAndStoreToken(hashOrQuery) {
+  const p = new URLSearchParams(hashOrQuery);
+  const token = p.get('access_token');
+  const exp   = p.get('expires_in');
+  if (token) {
+    storeToken(token, exp || '3600');
+    updateSyncUI('connected');
+    toast('✅ Connected to Zoho Sheet!');
+    syncFromZoho();
+  } else {
+    updateSyncUI('disconnected');
+    toast('❌ Could not get Zoho token. Try again.', 'warn');
+  }
+}
+
+// Handle redirect back to this page with token in URL hash
+(function checkOAuthRedirect() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    extractAndStoreToken(hash.slice(1));
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+})();
+
+
+// ══════════════════════════════════════════════
+//  ZOHO SHEET API
+// ══════════════════════════════════════════════
+async function zohoReq(method, path, body) {
+  const token = getToken();
+  if (!token) throw new Error('Not connected to Zoho. Click "Connect" to re-authenticate.');
+  const opts = {
+    method,
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}` }
+  };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    opts.body = new URLSearchParams(body).toString();
+  }
+  const res = await fetch(`${ZOHO_API}${path}`, opts);
+  const data = await res.json().catch(() => ({}));
+  if (data.error_code && data.error_code !== 0) throw new Error(data.message || `Zoho error ${data.error_code}`);
+  return data;
+}
+
+async function zohoGetAllRows() {
+  const cfg = getCfg();
+  const sheet = encodeURIComponent(cfg.sheetName || 'Daily School Visit');
+  const data  = await zohoReq('GET', `/${cfg.workbookId}/rows?worksheet_name=${sheet}&start_index=1&row_count=5000`);
+  return data.rows || [];
+}
+
+async function zohoAddRow(rec) {
+  const cfg = getCfg();
+  return zohoReq('POST', `/${cfg.workbookId}/row`, {
+    worksheet_name: cfg.sheetName || 'School Visits',
+    row_data: JSON.stringify(recToRow(rec))
+  });
+}
+
+async function zohoUpdateRow(rowIndex, rec) {
+  const cfg = getCfg();
+  return zohoReq('PUT', `/${cfg.workbookId}/row`, {
+    worksheet_name: cfg.sheetName || 'School Visits',
+    row_index: rowIndex,
+    row_data: JSON.stringify(recToRow(rec))
+  });
+}
+
+async function zohoDeleteRow(rowIndex) {
+  const cfg = getCfg();
+  return zohoReq('DELETE', `/${cfg.workbookId}/row`, {
+    worksheet_name: cfg.sheetName || 'School Visits',
+    row_index: rowIndex
+  });
+}
+
+// Row ↔ Record mapping
+function recToRow(r) {
+  return {
+    'Date': r.date, 'Rep': r.rep, 'School': r.school,
+    'Type': r.type, 'Status': r.status, 'Contact': r.contact||'',
+    'Description': r.desc, 'Next Date': r.nextDate||'',
+    'Next Action': r.nextAction||'', 'Record ID': r.id
+  };
+}
+function rowToRec(row) {
+  return {
+    id:          row['Record ID'] || genId(),
+    date:        row['Date']        || '',
+    rep:         row['Rep']         || '',
+    school:      row['School']      || '',
+    type:        row['Type']        || 'New',
+    status:      row['Status']      || 'Target',
+    contact:     row['Contact']     || '',
+    desc:        row['Description'] || '',
+    nextDate:    row['Next Date']   || '',
+    nextAction:  row['Next Action'] || '',
+    zohoRowIdx:  row._row_index || row.row_index || null,
+    created:     Date.now(), updated: Date.now()
+  };
+}
+
+// Full sync: pull all rows from Zoho
+async function syncFromZoho() {
+  if (!isConnected()) { connectZoho(); return; }
+  if (!getCfg().workbookId) { toast('⚠️ Set Workbook ID in Setup first', 'warn'); return; }
+  try {
+    isSyncing = true;
+    updateSyncUI('syncing');
+    const rows = await zohoGetAllRows();
+    if (rows.length > 0) {
+      records = rows.map(rowToRec).filter(r => r.school);
+      saveLocal();
+      refreshAll();
+      toast(`✅ Synced ${records.length} records from Zoho Sheet`);
+    } else {
+      toast('ℹ️ Sheet is empty or no data found yet');
+    }
+    updateSyncUI('connected');
+    localStorage.setItem('zoho_last_sync', new Date().toLocaleTimeString());
+    updateSyncLabel();
+  } catch(e) {
+    toast('❌ Sync failed: ' + e.message, 'warn');
+    console.error('[ZohoSync]', e);
+    if (e.message.includes('Not connected') || e.message.includes('token')) {
+      updateSyncUI('disconnected');
+    } else {
+      updateSyncUI('connected');
+    }
+  } finally { isSyncing = false; }
+}
+
+
+// ══════════════════════════════════════════════
+//  LOCAL STORAGE
+// ══════════════════════════════════════════════
+function loadLocal() { const r=localStorage.getItem(SK_RECORDS); records=r?JSON.parse(r):[]; }
+function saveLocal() { localStorage.setItem(SK_RECORDS, JSON.stringify(records)); }
+function genId()     { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function today()     { return new Date().toISOString().slice(0,10); }
+
+
+// ══════════════════════════════════════════════
+//  FORM
+// ══════════════════════════════════════════════
+function clearForm() {
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').textContent = 'Log New Visit';
+  document.getElementById('fDate').value       = today();
+  document.getElementById('fRep').value        = localStorage.getItem(SK_REP)||'';
+  document.getElementById('fSchool').value     = '';
+  document.getElementById('fType').value       = 'New';
+  document.getElementById('fStatus').value     = 'Target';
+  document.getElementById('fContact').value    = '';
+  document.getElementById('fDesc').value       = '';
+  document.getElementById('fNextDate').value   = '';
+  document.getElementById('fNextAction').value = '';
+}
+
+async function saveRecord() {
+  const school = document.getElementById('fSchool').value.trim();
+  const desc   = document.getElementById('fDesc').value.trim();
+  const rep    = document.getElementById('fRep').value.trim();
+  const date   = document.getElementById('fDate').value;
+  if (!school) { toast('⚠️ Enter the school name','warn'); return; }
+  if (!desc)   { toast('⚠️ Add a meeting description','warn'); return; }
+  if (!rep)    { toast('⚠️ Enter your name','warn'); return; }
+  if (!date)   { toast('⚠️ Select the visit date','warn'); return; }
+
+  const editId = document.getElementById('editId').value;
+  const existing = editId ? records.find(r=>r.id===editId) : null;
+  const rec = {
+    id:         editId || genId(),
+    date, rep, school,
+    type:       document.getElementById('fType').value,
+    status:     document.getElementById('fStatus').value,
+    contact:    document.getElementById('fContact').value.trim(),
+    desc,
+    nextDate:   document.getElementById('fNextDate').value,
+    nextAction: document.getElementById('fNextAction').value.trim(),
+    zohoRowIdx: existing?.zohoRowIdx || null,
+    created:    existing?.created || Date.now(),
+    updated:    Date.now()
+  };
+
+  // Save locally
+  if (editId) { const i=records.findIndex(r=>r.id===editId); if(i>=0) records[i]=rec; }
+  else        { records.unshift(rec); }
+  saveLocal();
+  refreshAll();
+  clearForm();
+
+  // Sync to Zoho
+  if (isConnected() && getCfg().workbookId) {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = '⏳ Saving…';
+    try {
+      if (editId && rec.zohoRowIdx) {
+        await zohoUpdateRow(rec.zohoRowIdx, rec);
+        toast('✅ Visit updated & synced to Zoho!');
+      } else {
+        const resp = await zohoAddRow(rec);
+        // Try to store row index returned by Zoho
+        if (resp && resp.row_index) {
+          const idx = records.findIndex(r=>r.id===rec.id);
+          if (idx>=0) { records[idx].zohoRowIdx = resp.row_index; saveLocal(); }
+        }
+        toast('✅ Visit saved & synced to Zoho Sheet!');
+      }
+    } catch(e) {
+      toast('💾 Saved locally. Zoho sync failed: '+e.message, 'warn');
+      console.error('[ZohoSave]', e);
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Save Visit';
+    }
+  } else {
+    toast(editId ? '✅ Record updated locally' : '💾 Visit saved locally (not synced to Zoho)');
+  }
+}
+
+function editRecord(id) {
+  const r = records.find(r=>r.id===id); if(!r) return;
+  document.getElementById('editId').value      = r.id;
+  document.getElementById('formTitle').textContent = 'Edit Visit';
+  document.getElementById('fDate').value       = r.date;
+  document.getElementById('fRep').value        = r.rep;
+  document.getElementById('fSchool').value     = r.school;
+  document.getElementById('fType').value       = r.type;
+  document.getElementById('fStatus').value     = r.status;
+  document.getElementById('fContact').value    = r.contact||'';
+  document.getElementById('fDesc').value       = r.desc;
+  document.getElementById('fNextDate').value   = r.nextDate||'';
+  document.getElementById('fNextAction').value = r.nextAction||'';
+  showTab('log');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteRecord(id) { deleteId=id; document.getElementById('deleteOverlay').classList.add('show'); }
+function closeDeleteModal()  { document.getElementById('deleteOverlay').classList.remove('show'); deleteId=null; }
+
+async function confirmDelete() {
+  const rec = records.find(r=>r.id===deleteId);
+  records = records.filter(r=>r.id!==deleteId);
+  saveLocal(); refreshAll(); closeDeleteModal();
+  toast('🗑️ Record deleted locally');
+  if (rec && rec.zohoRowIdx && isConnected()) {
+    try { await zohoDeleteRow(rec.zohoRowIdx); toast('🗑️ Also deleted from Zoho Sheet'); }
+    catch(e) { toast('⚠️ Deleted locally, but Zoho delete failed: '+e.message,'warn'); }
+  }
+}
+
+
+// ══════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════
+function renderStats() {
+  const c={Target:0,Lead:0,Opportunity:0,Closure:0};
+  records.forEach(r=>{if(c[r.status]!==undefined)c[r.status]++;});
+  const todayC = records.filter(r=>r.date===today()).length;
+  const defs=[
+    {l:'Total',v:records.length,       i:'📊',bg:'#eff6ff',co:'#2563eb'},
+    {l:'Target',v:c.Target,            i:'🎯',bg:'#f1f5f9',co:'#475569'},
+    {l:'Lead',v:c.Lead,                i:'💡',bg:'#dbeafe',co:'#1d4ed8'},
+    {l:'Opportunity',v:c.Opportunity,  i:'🔥',bg:'#fef3c7',co:'#92400e'},
+    {l:'Closure',v:c.Closure,          i:'✅',bg:'#dcfce7',co:'#166534'},
+    {l:'Today',v:todayC,               i:'📅',bg:'#fdf4ff',co:'#7c3aed'},
+  ];
+  document.getElementById('statsBar').innerHTML = defs.map(d=>`
+    <div class="stat-card">
+      <div class="stat-icon" style="background:${d.bg};color:${d.co}">${d.i}</div>
+      <div><div class="stat-label">${d.l}</div><div class="stat-value" style="color:${d.co}">${d.v}</div></div>
+    </div>`).join('');
+}
+
+
+// ══════════════════════════════════════════════
+//  TODAY TABLE
+// ══════════════════════════════════════════════
+function renderToday() {
+  const list = records.filter(r=>r.date===today());
+  document.getElementById('todayCount').textContent = `— ${list.length} visit${list.length!==1?'s':''}`;
+  document.getElementById('todayTable').innerHTML = list.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>School</th><th>Type</th><th>Status</th><th>Rep</th><th>Description</th><th>Next Action</th></tr></thead>
+        <tbody>${list.map(r=>`<tr>
+          <td class="td-school">${esc(r.school)}</td>
+          <td>${typeBadge(r.type)}</td><td>${sBadge(r.status)}</td>
+          <td class="td-rep">${esc(r.rep)}</td>
+          <td class="td-desc">${esc(r.desc)}</td>
+          <td class="td-desc">${r.nextAction?esc(r.nextAction):'<span style="color:#ccc">—</span>'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    : `<div class="empty"><div>📋</div><p>No visits logged today yet.</p></div>`;
+}
+
+
+// ══════════════════════════════════════════════
+//  ALL RECORDS TABLE
+// ══════════════════════════════════════════════
+function getFiltered() {
+  const q  = (document.getElementById('searchQ')?.value||'').toLowerCase();
+  const dt = document.getElementById('filterDate')?.value||'';
+  const st = document.getElementById('filterStatus')?.value||'';
+  const tp = document.getElementById('filterType')?.value||'';
+  const rp = document.getElementById('filterRep')?.value||'';
+  return records.filter(r=>{
+    if(q  && !`${r.school} ${r.rep} ${r.desc} ${r.contact||''} ${r.nextAction||''}`.toLowerCase().includes(q)) return false;
+    if(dt && r.date!==dt)   return false;
+    if(st && r.status!==st) return false;
+    if(tp && r.type!==tp)   return false;
+    if(rp && r.rep!==rp)    return false;
+    return true;
+  });
+}
+
+function sortBy(f) { if(sortField===f)sortAsc=!sortAsc; else{sortField=f;sortAsc=true;} renderTable(); }
+
+function renderTable() {
+  let rows = getFiltered();
+  rows.sort((a,b)=>{
+    const va=a[sortField]||'', vb=b[sortField]||'';
+    return sortAsc?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);
+  });
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = rows.length
+    ? rows.map(r=>`<tr>
+        <td style="white-space:nowrap">${r.date}</td>
+        <td class="td-rep">${esc(r.rep)}</td>
+        <td class="td-school">${esc(r.school)}</td>
+        <td>${typeBadge(r.type)}</td>
+        <td>${sBadge(r.status)}</td>
+        <td class="td-rep">${esc(r.contact||'—')}</td>
+        <td class="td-desc">${esc(r.desc)}</td>
+        <td style="white-space:nowrap;font-size:11px;">${r.nextDate||'—'}<br><span style="color:var(--muted)">${esc(r.nextAction||'')}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-outline btn-sm" onclick="editRecord('${r.id}')">✏️</button>
+          <button class="btn btn-danger  btn-sm" onclick="deleteRecord('${r.id}')">🗑️</button>
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="9"><div class="empty"><div>🔍</div><p>No records match your filters.</p></div></td></tr>`;
+  document.getElementById('recordCount').textContent = `Showing ${rows.length} of ${records.length} records`;
+  syncRepDropdowns();
+}
+
+
+// ══════════════════════════════════════════════
+//  PIPELINE
+// ══════════════════════════════════════════════
+function renderPipeline() {
+  const rf = document.getElementById('pipelineRep')?.value||'';
+  const src = rf ? records.filter(r=>r.rep===rf) : records;
+  const schoolMap={};
+  [...src].sort((a,b)=>a.date<b.date?1:-1).forEach(r=>{ if(!schoolMap[r.school]) schoolMap[r.school]=r; });
+  const latest = Object.values(schoolMap);
+  const cols=['Target','Lead','Opportunity','Closure'];
+  const icons={Target:'🎯',Lead:'💡',Opportunity:'🔥',Closure:'✅'};
+  const cbcls={Target:'cb-t',Lead:'cb-l',Opportunity:'cb-o',Closure:'cb-c'};
+  const byS={};cols.forEach(c=>byS[c]=[]);
+  latest.forEach(r=>{ if(byS[r.status]) byS[r.status].push(r); });
+  document.getElementById('pipelineView').innerHTML = cols.map(col=>`
+    <div class="pcol">
+      <div class="pcol-hdr">
+        <span>${icons[col]} ${col}</span>
+        <span class="cbubble ${cbcls[col]}">${byS[col].length}</span>
+      </div>
+      ${byS[col].length ? byS[col].map(r=>`
+        <div class="pcard">
+          <div class="ps">${esc(r.school)}</div>
+          <div class="pm">${r.date} · ${esc(r.rep)}</div>
+          ${r.nextAction?`<div class="pm" style="color:#0369a1;margin-top:2px;">→ ${esc(r.nextAction)}</div>`:''}
+        </div>`).join('')
+      : `<div style="font-size:11px;color:#ccc;text-align:center;padding:20px">No schools</div>`}
+    </div>`).join('');
+}
+
+
+// ══════════════════════════════════════════════
+//  TEAM VIEW (Consolidate)
+// ══════════════════════════════════════════════
+function renderConsolidated() {
+  const q  = (document.getElementById('conSearch')?.value||'').toLowerCase();
+  const rs = document.getElementById('conRep')?.value||'';
+  const ss = document.getElementById('conStatus')?.value||'';
+  const filtered = records.filter(r=>{
+    if(q  && !`${r.school} ${r.rep} ${r.desc}`.toLowerCase().includes(q)) return false;
+    if(rs && r.rep!==rs)    return false;
+    if(ss && r.status!==ss) return false;
+    return true;
+  });
+  // Stats
+  const c={Target:0,Lead:0,Opportunity:0,Closure:0};
+  records.forEach(r=>{if(c[r.status]!==undefined)c[r.status]++;});
+  const reps=[...new Set(records.map(r=>r.rep))];
+  document.getElementById('conStats').innerHTML = [
+    {l:'Total',v:records.length,i:'📊',bg:'#eff6ff',co:'#2563eb'},
+    {l:'Target',v:c.Target,i:'🎯',bg:'#f1f5f9',co:'#475569'},
+    {l:'Lead',v:c.Lead,i:'💡',bg:'#dbeafe',co:'#1d4ed8'},
+    {l:'Opportunity',v:c.Opportunity,i:'🔥',bg:'#fef3c7',co:'#92400e'},
+    {l:'Closure',v:c.Closure,i:'✅',bg:'#dcfce7',co:'#166534'},
+    {l:'Reps',v:reps.length,i:'👥',bg:'#fdf4ff',co:'#7c3aed'},
+  ].map(d=>`<div class="stat-card">
+    <div class="stat-icon" style="background:${d.bg};color:${d.co}">${d.i}</div>
+    <div><div class="stat-label">${d.l}</div><div class="stat-value" style="color:${d.co}">${d.v}</div></div>
+  </div>`).join('');
+  // Rep filter
+  const sel = document.getElementById('conRep');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Reps</option>'+reps.sort().map(r=>`<option ${r===cur?'selected':''}>${esc(r)}</option>`).join('');
+  // Table
+  document.getElementById('conBody').innerHTML = filtered.map(r=>`<tr>
+    <td>${r.date}</td><td class="td-rep">${esc(r.rep)}</td>
+    <td class="td-school">${esc(r.school)}</td><td>${typeBadge(r.type)}</td>
+    <td>${sBadge(r.status)}</td><td class="td-rep">${esc(r.contact||'—')}</td>
+    <td class="td-desc">${esc(r.desc)}</td><td>${r.nextDate||'—'}</td>
+  </tr>`).join('');
+  document.getElementById('conCount').textContent = `Showing ${filtered.length} of ${records.length} records`;
+}
+
+// Show/hide Team View panels based on Zoho connection
+function updateTeamView() {
+  const connected = isConnected() && isZohoCfg();
+  document.getElementById('zohoConnectedView').classList.toggle('hidden', !connected);
+  document.getElementById('noZohoView').classList.toggle('hidden', connected);
+  if (connected) renderConsolidated();
+}
+
+
+// ══════════════════════════════════════════════
+//  CSV EXPORT / IMPORT (fallback)
+// ══════════════════════════════════════════════
+const CSV_HDR = ['Date','Rep','School','Type','Status','Contact','Description','Next Date','Next Action'];
+function recToCsv(r) {
+  return [r.date,r.rep,r.school,r.type,r.status,r.contact||'',r.desc,r.nextDate||'',r.nextAction||'']
+    .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',');
+}
+
+function exportCSV(mode) {
+  const rows = getFiltered();
+  if(!rows.length){toast('No records to export','warn');return;}
+  const csv = [CSV_HDR.join(','),...rows.map(recToCsv)].join('\n');
+  dlFile(`school_visits_${today()}.csv`, csv, 'text/csv');
+  toast(`✅ Exported ${rows.length} records`);
+}
+
+function dlFile(name, content, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type:mime}));
+  a.download = name; a.click();
+}
+
+function importCSVs(input) {
+  const files = Array.from(input.files); if(!files.length) return;
+  let imported=[], done=0;
+  files.forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      imported.push(...parseCSV(e.target.result));
+      if(++done===files.length) {
+        document.getElementById('importStatus').textContent = `✅ ${imported.length} records from ${files.length} file(s)`;
+        showCsvConsolidated(imported);
+        toast(`✅ Imported ${imported.length} records`);
+      }
+    };
+    r.readAsText(f);
+  });
+  input.value='';
+}
+
+function parseCSV(txt) {
+  const lines=txt.split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2) return [];
+  return lines.slice(1).map(l=>{
+    const c=parseCSVLine(l);
+    if(c.length<5) return null;
+    return {id:genId(),date:c[0]||'',rep:c[1]||'',school:c[2]||'',type:c[3]||'New',
+      status:c[4]||'Target',contact:c[5]||'',desc:c[6]||'',nextDate:c[7]||'',nextAction:c[8]||''};
+  }).filter(Boolean);
+}
+
+function parseCSVLine(line) {
+  const r=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}
+    else if(c===','&&!q){r.push(cur);cur='';}
+    else cur+=c;
+  }
+  r.push(cur); return r;
+}
+
+function showCsvConsolidated(data) {
+  const el = document.getElementById('csvConsolidatedView');
+  el.classList.remove('hidden');
+  const c={Target:0,Lead:0,Opportunity:0,Closure:0};
+  data.forEach(r=>{if(c[r.status]!==undefined)c[r.status]++;});
+  el.innerHTML = `
+    <div class="info-box">
+      <strong>📊 Consolidated:</strong> ${data.length} records | Target: ${c.Target} | Lead: ${c.Lead} | Opportunity: ${c.Opportunity} | Closure: ${c.Closure}
+    </div>
+    <div class="table-wrap">
+    <table><thead><tr><th>Date</th><th>Rep</th><th>School</th><th>Type</th><th>Status</th><th>Description</th></tr></thead>
+    <tbody>${data.slice(0,100).map(r=>`<tr>
+      <td>${r.date}</td><td class="td-rep">${esc(r.rep)}</td>
+      <td class="td-school">${esc(r.school)}</td><td>${typeBadge(r.type)}</td>
+      <td>${sBadge(r.status)}</td><td class="td-desc">${esc(r.desc)}</td>
+    </tr>`).join('')}
+    ${data.length>100?`<tr><td colspan="6" style="text-align:center;padding:10px;color:var(--muted)">Showing first 100 of ${data.length} records</td></tr>`:''}
+    </tbody></table></div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-success btn-sm" onclick="dlFile('consolidated_${today()}.csv','${CSV_HDR.join(',')}\\n'+${JSON.stringify(data)}.map(r=>[r.date,r.rep,r.school,r.type,r.status,r.contact||'',r.desc,r.nextDate||'',r.nextAction||''].map(v=>'\\"'+String(v||'').replace(/\\"/g,'\\"\\\"')+'\\"').join(',')).join('\\n'),'text/csv')">⬇ Export Consolidated CSV</button>
+    </div>`;
+}
+
+
+// ══════════════════════════════════════════════
+//  SETTINGS MODAL
+// ══════════════════════════════════════════════
+function showSettings() {
+  const cfg = getCfg();
+  document.getElementById('cfgClientId').value   = cfg.clientId||'';
+  document.getElementById('cfgWorkbookId').value = cfg.workbookId||'';
+  document.getElementById('cfgSheetName').value  = cfg.sheetName||'Daily School Visit';
+  document.getElementById('cfgRedirectUri').value= cfg.redirectUri||'';
+  document.getElementById('currentUrl').textContent = window.location.href.split('#')[0].split('?')[0];
+  // DC selector — default to .in
+  const dc = cfg.dc||'.in';
+  document.querySelectorAll('.dc-opt').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.dc===dc);
+  });
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+
+function selDC(el) {
+  document.querySelectorAll('.dc-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveSettings() {
+  const clientId   = document.getElementById('cfgClientId').value.trim();
+  const workbookId = document.getElementById('cfgWorkbookId').value.trim();
+  const sheetName  = document.getElementById('cfgSheetName').value.trim() || 'Daily School Visit';
+  const redirectUri= document.getElementById('cfgRedirectUri').value.trim();
+  const dc         = document.querySelector('.dc-opt.sel')?.dataset.dc || '.in';
+
+  if (!clientId)   { document.getElementById('cfgStatus').innerHTML='<span style="color:red">❌ Client ID is required</span>'; return; }
+  if (!workbookId) { document.getElementById('cfgStatus').innerHTML='<span style="color:red">❌ Workbook ID is required</span>'; return; }
+
+  saveCfg({clientId, workbookId, sheetName, redirectUri, dc});
+  document.getElementById('cfgStatus').innerHTML = '<span style="color:green">✅ Saved! Connecting to Zoho…</span>';
+  setTimeout(() => { closeSettings(); connectZoho(); }, 800);
+}
+
+
+// ══════════════════════════════════════════════
+//  SYNC STATUS UI
+// ══════════════════════════════════════════════
+function updateSyncUI(state) {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className='dot';
+  if(state==='connected')   { dot.classList.add('green'); label.textContent='Zoho Connected'; }
+  else if(state==='syncing')  { dot.classList.add('yellow'); label.textContent='Syncing…'; }
+  else if(state==='connecting'){ dot.classList.add('yellow'); label.textContent='Connecting…'; }
+  else                        { label.textContent='Not connected'; }
+}
+
+function updateSyncLabel() {
+  const last = localStorage.getItem('zoho_last_sync');
+  if(last && isConnected()) document.getElementById('syncLabel').textContent = `Synced ${last}`;
+}
+
+function handleSyncClick() {
+  if(!isZohoCfg())       { showSettings(); return; }
+  if(!isConnected())     { connectZoho(); return; }
+  syncFromZoho();
+}
+
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sBadge(s){
+  const m={Target:'badge-target',Lead:'badge-lead',Opportunity:'badge-oppty',Closure:'badge-closure'};
+  return `<span class="badge ${m[s]||''}">${esc(s)}</span>`;
+}
+function typeBadge(t){
+  return t==='Follow-up'
+    ? `<span class="badge badge-fup">🔄 Follow-up</span>`
+    : `<span class="badge badge-new">🆕 New</span>`;
+}
+function toast(msg, type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=type==='warn'?'#92400e':'#1e293b';
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+function showTab(name) {
+  ['log','records','pipeline','consolidate'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden',t!==name);
+  });
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',['log','records','pipeline','consolidate'][i]===name);
+  });
+  if(name==='records')    renderTable();
+  if(name==='pipeline')   renderPipeline();
+  if(name==='consolidate'){updateTeamView();}
+}
+function syncRepDropdowns() {
+  const reps=[...new Set(records.map(r=>r.rep))].sort();
+  ['filterRep','pipelineRep'].forEach(id=>{
+    const s=document.getElementById(id); if(!s) return;
+    const v=s.value;
+    s.innerHTML='<option value="">All Reps</option>'+reps.map(r=>`<option ${r===v?'selected':''}>${esc(r)}</option>`).join('');
+  });
+}
+function refreshAll() {
+  renderStats(); renderToday(); renderTable(); renderPipeline();
+  if(!document.getElementById('tab-consolidate').classList.contains('hidden')) updateTeamView();
+}
+
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+(function init() {
+  loadLocal();
+  // Rep name persistence
+  const rep=localStorage.getItem(SK_REP)||'';
+  document.getElementById('repInput').value=rep;
+  document.getElementById('fRep').value=rep;
+  document.getElementById('repInput').addEventListener('input',function(){
+    localStorage.setItem(SK_REP,this.value);
+    document.getElementById('fRep').value=this.value;
+  });
+
+  // Date display
+  document.getElementById('dateDisplay').textContent =
+    new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  clearForm();
+  refreshAll();
+
+  // Sync status
+  if(isConnected()) {
+    updateSyncUI('connected');
+    updateSyncLabel();
+    syncFromZoho(); // auto-sync on load if token valid
+  } else if(isZohoCfg()) {
+    updateSyncUI('disconnected');
+    document.getElementById('syncLabel').textContent='Click to connect Zoho';
+    // Show a one-time connect hint
+    setTimeout(()=>toast('👆 Click "Connect Zoho" in the header to sign in & sync data'), 1000);
+  }
+})();
+</script>
+</body>
+</html>
