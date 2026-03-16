@@ -661,25 +661,23 @@ async function saveRecord() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = '⏳ Saving…';
   try {
-    const payload = {
-      date:       rec.date,
-      rep:        rec.rep,
-      school:     rec.school,
-      type:       rec.type,
-      status:     rec.status,
-      contact:    rec.contact || '',
-      desc:       rec.desc,
-      nextDate:   rec.nextDate || '',
-      nextAction: rec.nextAction || '',
-      id:         rec.id
-    };
-    const res = await fetch(WEBHOOK_URL, {
+    const formData = new FormData();
+    formData.append('date',       rec.date);
+    formData.append('rep',        rec.rep);
+    formData.append('school',     rec.school);
+    formData.append('type',       rec.type);
+    formData.append('status',     rec.status);
+    formData.append('contact',    rec.contact || '');
+    formData.append('desc',       rec.desc);
+    formData.append('nextDate',   rec.nextDate || '');
+    formData.append('nextAction', rec.nextAction || '');
+    formData.append('id',         rec.id);
+
+    await fetch(WEBHOOK_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+      body: formData
     });
-    // no-cors returns opaque response — if no error thrown, it worked
     toast('✅ Visit saved & synced to Zoho Sheet!');
   } catch(e) {
     toast('💾 Saved locally. Zoho sync failed: ' + e.message, 'warn');
