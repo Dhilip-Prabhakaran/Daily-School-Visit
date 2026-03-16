@@ -359,7 +359,7 @@ const SK_CONFIG  = 'schoolCRM_zohoConfig';
 const SK_TOKEN   = 'schoolCRM_token';
 const SK_REP     = 'schoolCRM_rep';
 const ZOHO_API   = 'https://sheet.zoho.in/api/v2';
-const WEBHOOK_URL = 'https://flow.zoho.in/60067412720/flow/webhook/incoming?zapikey=1001.aca7348d07ebee69eb63e5ae748572be.ce9eb5571e4dc48fbb154127a0320a6b&isdebug=false';
+const WEBHOOK_URL = 'https://fancy-fog-6c71.dhilip-prabhakaran.workers.dev/';
 
 let records   = [];
 let sortField = 'date';
@@ -674,29 +674,15 @@ async function saveRecord() {
       id:         rec.id
     };
 
-    const body = JSON.stringify(payload);
-    const headers = { 'Content-Type': 'application/json' };
-
-    // Try direct first, then fallback proxies
-    const attempts = [
-      () => fetch(WEBHOOK_URL, { method:'POST', headers, body }),
-      () => fetch('https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL), { method:'POST', headers, body }),
-      () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(WEBHOOK_URL), { method:'POST', headers, body }),
-    ];
-
-    let success = false;
-    for (const attempt of attempts) {
-      try {
-        const res = await attempt();
-        if (res.ok || res.status === 200 || res.type === 'opaque') {
-          success = true; break;
-        }
-      } catch(e) { continue; }
-    }
-    if (success) {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
       toast('✅ Visit saved & synced to Zoho Sheet!');
     } else {
-      throw new Error('All sync attempts failed');
+      throw new Error(`HTTP ${res.status}`);
     }
   } catch(e) {
     toast('💾 Saved locally. Zoho sync failed: ' + e.message, 'warn');
